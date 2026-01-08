@@ -1,0 +1,65 @@
+{
+    "faqs": [
+        {
+            "id": 1,
+            "question": "order status",
+            "keywords": ["order", "status", "track", "tracking", "where", "delivery", "shipped"],
+            "response": "I can help you check your order status. Please provide your order ID, and I'll look it up for you."
+        },
+        {
+            "id": 2,
+            "question": "return policy",
+            "keywords": ["return", "refund", "exchange", "policy", "send back", "money back"],
+            "response": "Our return policy allows returns within 30 days of purchase. Items must be unused and in original packaging. Would you like to initiate a return?"
+        },
+        {
+            "id": 3,
+            "question": "shipping",
+            "keywords": ["shipping", "delivery", "ship", "how long", "when", "arrive", "dispatch"],
+            "response": "Standard shipping takes 5-7 business days. Express shipping (2-3 days) is available for an additional fee. Free shipping is available on orders over $50."
+        },
+        {
+            "id": 4,
+            "question": "payment",
+            "keywords": ["payment", "pay", "card", "credit", "debit", "payment method", "checkout"],
+            "response": "We accept all major credit cards, debit cards, PayPal, and digital wallets. All payments are processed securely through encrypted channels."
+        },
+        {
+            "id": 5,
+            "question": "account",
+            "keywords": ["account", "login", "sign in", "password", "forgot", "register", "sign up"],
+            "response": "You can create an account by clicking 'Sign Up' on our homepage. If you forgot your password, use the 'Forgot Password' link on the login page."
+        },
+        {
+            "id": 6,
+            "question": "product availability",
+            "keywords": ["available", "stock", "in stock", "out of stock", "when available", "backorder"],
+            "response": "I can check product availability for you. Please provide the product name or ID, and I'll check our inventory."
+        },
+        {
+            "id": 7,
+            "question": "cancel order",
+            "keywords": ["cancel", "cancel order", "stop", "don't want", "remove order"],
+            "response": "Orders can be cancelled within 24 hours of placement if they haven't been shipped yet. Would you like me to help you cancel an order?"
+        },
+        {
+            "id": 8,
+            "question": "contact support",
+            "keywords": ["contact", "support", "help", "talk", "speak", "phone", "email", "customer service"],
+            "response": "You can reach our support team at support@example.com or call 1-800-123-4567. Our support hours are Monday-Friday, 9 AM - 6 PM EST."
+        },
+        {
+            "id": 9,
+            "question": "discount code",
+            "keywords": ["discount", "coupon", "promo", "code", "voucher", "deal", "offer", "sale"],
+            "response": "You can apply discount codes at checkout. Check our newsletter or social media for current promotions and discount codes."
+        },
+        {
+            "id": 10,
+            "question": "warranty",
+            "keywords": ["warranty", "guarantee", "defect", "broken", "not working", "repair"],
+            "response": "Most products come with a 1-year manufacturer's warranty. If you have a defective product, please contact us with your order number and we'll assist you."
+        }
+    ]
+}
+
