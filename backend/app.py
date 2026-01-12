@@ -175,15 +175,15 @@ def chat():
     try:
         data = request.get_json()
         user_message = data.get('message', '').strip()
+
+        print("USER MESSAGE:", user_message)   # 👈 ADD THIS LINE
+
         if not user_message:
             return jsonify({'error': 'Message is required'}), 400
         faq_response = match_faq(user_message)
         bot_response = faq_response if faq_response else generate_ai_response(user_message)
         save_chat_history(user_message, bot_response)
         return jsonify({'response': bot_response, 'timestamp': datetime.now().isoformat()}), 200
-    except Exception as e:
-        print(f"Error in chat endpoint: {e}")
-        return jsonify({'error': 'An error occurred', 'response': 'I encountered an error. Please try again.'}), 500
 
 @app.route('/order_status', methods=['GET'])
 def order_status():
