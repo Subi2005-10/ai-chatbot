@@ -2,7 +2,7 @@
 AI-Powered Customer Support Chatbot - Backend API
 Flask REST API for handling chat requests, NLP processing, and AI responses
 """
-
+import google.generativeai as genai
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import sqlite3
@@ -133,34 +133,24 @@ def match_faq(user_message):
     return None
 
 def generate_ai_response(user_message):
-    openai_api_key = os.environ.get('OPENAI_API_KEY')
-    if openai_api_key:
-        try:
-            import openai
-            openai.api_key = openai_api_key
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "You are a helpful customer support assistant for an e-commerce store. Be friendly, concise, and helpful."},
-                    {"role": "user", "content": user_message}
-                ],
-                max_tokens=150,
-                temperature=0.7
-            )
-            return response.choices[0].message.content.strip()
-        except Exception as e:
-            print(f"OpenAI API error: {e}")
-    
-    user_lower = user_message.lower()
-    if any(word in user_lower for word in ['order', 'purchase', 'bought']):
-        if 'status' in user_lower or 'where' in user_lower:
-            return "I'd be happy to help you check your order status. Please provide your order ID."
-        return "I can help you with your order. Please provide your order ID."
-    if any(word in user_lower for word in ['product', 'item', 'buy', 'price']):
-        return "I can help you find information about our products. Please specify which product."
-    if any(word in user_lower for word in ['problem', 'issue', 'wrong', 'broken', 'not working', 'complaint']):
-        return "I'm sorry to hear you're experiencing an issue. Please provide details so I can assist."
-    return "Thank you for your message. I understand you need assistance. I can connect you with a support agent if needed."
+    api_key = os.environ.get("AIzaSyCyI9FGoFaXwWFKN6LHhXxhOkt4rjP1dNM")
+
+    if not api_key:
+        return "Gemini API key not found."
+
+    genai.configure(api_key=api_key)
+
+    try:
+        model = genai.GenerativeModel("gemini-pro")
+        response = model.generate_content(
+            f"You are a helpful customer support assistant for an e-commerce store.\n"
+            f"Be friendly, concise, and helpful.\n\n"
+            f"User: {user_message}"
+        )
+        return response.text
+    except Exception as e:
+        print("Gemini API error:", e)
+        return "Sorry, I'm having trouble responding right now."
 
 def save_chat_history(user_message, bot_response):
     conn = sqlite3.connect(DATABASE)
