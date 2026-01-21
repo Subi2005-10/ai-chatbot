@@ -83,6 +83,60 @@ def init_database():
     conn.commit()
     conn.close()
     print("Database initialized successfully!")
+@app.route('/chat', methods=['POST'])
+def chat():
+    data = request.get_json()
+    user_message = data.get('message', '').strip()
+
+    if not user_message:
+        return jsonify({'response': 'Please enter a message.'})
+
+    # ✅ STEP 1: If bot is waiting for order ID
+    if conversation_state["last_intent"] == "order_status" and is_order_id(user_message):
+        order_id = user_message
+
+        mock_orders = {
+            '123': {'status': 'Shipped', 'delivery': '2 days'},
+            '456': {'status': 'Processing', 'delivery': '5 days'},
+            '789': {'status': 'Delivered', 'delivery': 'Delivered on Jan 10'}
+        }
+
+        order = mock_orders.get(order_id)
+
+        if order:
+            bot_response = (
+                f"📦 Order {order_id} Status: {order['status']}\n"
+                f"Estimated Delivery: {order['delivery']}"
+            )
+        else:
+            bot_response = f"❌ No order found with ID {order_id}. Please check and try again."
+
+        conversation_state["last_intent"] = None
+        return jsonify({'response': bot_response})
+
+    # ✅ STEP 2: Detect intent
+    intent = detect_intent(user_message)
+    conversation_state["last_intent"] = intent
+
+    if intent == "greeting":
+        bot_response = "Hi 👋 How can I help you today?"
+
+    elif intent == "order_status":
+        bot_response = "Sure 📦 Please provide your order ID."
+
+    elif intent == "refund":
+        bot_response = "I can help with refunds. Please share your order ID."
+
+    elif intent == "product":
+        bot_response = "Which product would you like to know about?"
+
+    else:
+        conversation_state["last_intent"] = None
+        bot_response = generate_ai_response(user_message)
+
+    save_chat_history(user_message, bot_response)
+    return jsonify({'response': bot_response})
+
 
 # ------------------ NLP Utilities ------------------
 def preprocess_text(text):
