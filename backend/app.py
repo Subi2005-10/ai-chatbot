@@ -1,18 +1,12 @@
-"""
-I-Powered Customer Support Chatbot - Backend API
-Flask REST API for handling chat requests, multi-turn flows, and AI responses.
-No database required; uses in-memory mock data for orders, refunds, and products.
-"""
-
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
 from datetime import datetime
-import re
 import google.generativeai as genai
 
 # ------------------ Initialize Flask ------------------
-app = Flask(__name__)
+# Point static_folder to frontend relative to this file
+app = Flask(__name__, static_folder='../frontend')
 CORS(app)
 
 # ------------------ Conversation state ------------------
@@ -102,7 +96,6 @@ def chat():
             bot_response = f"❌ No order found with ID {order_id}. Please type a valid order ID."
             conversation_state["last_intent"] = "order_status"  # still waiting
 
-        # Clear pending if order found
         if order:
             conversation_state["last_intent"] = None
             conversation_state["pending_order_id"] = None
@@ -144,7 +137,7 @@ def chat():
             bot_response = product_info
         else:
             bot_response = "Which product would you like to know about? We have Laptop and Phone."
-        conversation_state["last_intent"] = None  # reset after product info
+        conversation_state["last_intent"] = None
 
     else:
         conversation_state["last_intent"] = None
@@ -152,22 +145,23 @@ def chat():
 
     return jsonify({'response': bot_response, 'timestamp': datetime.now().isoformat()})
 
-
+# Health check
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
 
+# Frontend serving
 @app.route('/')
 def serve_frontend():
-    return send_from_directory('frontend', 'index.html')
+    return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/<path:path>')
 def serve_static(path):
-    return send_from_directory('frontend', path)
-
+    return send_from_directory(app.static_folder, path)
 
 # ------------------ Main ------------------
 if __name__ == '__main__':
     print("Starting AI Customer Support Chatbot Backend...")
-    print("Server running on http://0.0.0.0:3000")
-    app.run(host='0.0.0.0', port=3000, debug=True)
+    port = int(os.environ.get("PORT", 3000))
+    print(f"Server running on http://0.0.0.0:{port}")
+    app.run(host='0.0.0.0', port=port, debug=True)
