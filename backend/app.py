@@ -5,7 +5,6 @@ from datetime import datetime
 import google.generativeai as genai
 
 # ------------------ Initialize Flask ------------------
-# Point static_folder to frontend relative to this file
 app = Flask(__name__, static_folder='../frontend')
 CORS(app)
 
@@ -22,7 +21,7 @@ mock_orders = {
     '789': {'status': 'Delivered', 'delivery': 'Delivered on Jan 10', 'items': ['Product D']}
 }
 
-mock_refunds = {}  # In-memory refund tracking
+mock_refunds = {}
 mock_products = {
     'laptop': '💻 Laptop – High-performance, ₹65,000, 16GB RAM, 512GB SSD',
     'phone': '📱 5G Smartphone – ₹25,000, 128GB storage, 6GB RAM'
@@ -30,30 +29,26 @@ mock_products = {
 
 # ------------------ Helper Functions ------------------
 def is_order_id(message):
-    """Check if the message is a valid order ID (digits)."""
     return message.isdigit() and len(message) >= 3
 
 def detect_intent(message):
-    """Basic intent detection using keywords."""
     msg = message.lower()
     if any(word in msg for word in ["hi", "hello", "hey"]):
         return "greeting"
-    if any(word in msg for word in ["order", "delivery", "status"]):
+    if any(word in msg for word in ["order", "delivery", "status", "package", "tracking"]):
         return "order_status"
-    if any(word in msg for word in ["refund", "return", "money back"]):
+    if any(word in msg for word in ["refund", "return", "money back", "cancel"]):
         return "refund"
-    if any(word in msg for word in ["product", "price", "buy"]):
+    if any(word in msg for word in ["product", "price", "buy", "laptop", "phone"]):
         return "product"
     return "general"
 
 def generate_ai_response(user_message):
-    """Fallback AI response using Gemini Pro."""
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         return "AI service is not configured."
 
     genai.configure(api_key=api_key)
-
     try:
         model = genai.GenerativeModel("gemini-pro")
         response = model.generate_content(
@@ -71,53 +66,47 @@ User: {user_message}
         return "I'm having trouble answering that right now."
 
 # ------------------ API Routes ------------------
-
 @app.route('/chat', methods=['POST'])
 def chat():
     data = request.get_json()
     user_message = data.get('message', '').strip()
-
     if not user_message:
         return jsonify({'response': 'Please enter a message.'})
 
-    # STEP 1: Multi-turn: if waiting for order ID
-    if conversation_state["last_intent"] == "order_status" and is_order_id(user_message):
-        order_id = user_message
-        conversation_state["pending_order_id"] = order_id
-
-        order = mock_orders.get(order_id)
-        if order:
-            bot_response = (
-                f"📦 Order {order_id} Status: {order['status']}\n"
-                f"Estimated Delivery: {order['delivery']}\n"
-                f"Items: {', '.join(order['items'])}"
-            )
-        else:
-            bot_response = f"❌ No order found with ID {order_id}. Please type a valid order ID."
-            conversation_state["last_intent"] = "order_status"  # still waiting
-
-        if order:
-            conversation_state["last_intent"] = None
-            conversation_state["pending_order_id"] = None
-
-        return jsonify({'response': bot_response})
-
-    # STEP 2: Multi-turn: if waiting for refund order ID
-    if conversation_state["last_intent"] == "refund" and is_order_id(user_message):
-        order_id = user_message
-        order = mock_orders.get(order_id)
-        if order:
-            mock_refunds[order_id] = "Pending"
-            bot_response = f"✅ Refund for order {order_id} has been initiated. You will receive confirmation soon."
-        else:
-            bot_response = f"❌ No order found with ID {order_id}. Please type a valid order ID."
-            conversation_state["last_intent"] = "refund"
+    # ------------------ Multi-turn: Order Status ------------------
+    if conversation_state["last_intent"] == "order_status":
+        if is_order_id(user_message):
+            order_id = user_message
+            order = mock_orders.get(order_id)
+            if order:
+                bot_response = (
+                    f"📦 Order {order_id} Status: {order['status']}\n"
+                    f"Estimated Delivery: {order['delivery']}\n"
+                    f"Items: {', '.join(order['items'])}"
+                )
+                conversation_state["last_intent"] = None
+            else:
+                bot_response = f"❌ No order found with ID {order_id}. Please type a valid order ID."
             return jsonify({'response': bot_response})
+        else:
+            return jsonify({'response': "Please provide a valid numeric order ID (e.g., 123)."})
 
-        conversation_state["last_intent"] = None
-        return jsonify({'response': bot_response})
+    # ------------------ Multi-turn: Refund ------------------
+    if conversation_state["last_intent"] == "refund":
+        if is_order_id(user_message):
+            order_id = user_message
+            order = mock_orders.get(order_id)
+            if order:
+                mock_refunds[order_id] = "Pending"
+                bot_response = f"✅ Refund for order {order_id} has been initiated. You will receive confirmation soon."
+                conversation_state["last_intent"] = None
+            else:
+                bot_response = f"❌ No order found with ID {order_id}. Please type a valid order ID."
+            return jsonify({'response': bot_response})
+        else:
+            return jsonify({'response': "Please provide a valid numeric order ID to initiate a refund."})
 
-    # STEP 3: Detect intent
+    # ------------------ Detect Intent ------------------
     intent = detect_intent(user_message)
     conversation_state["last_intent"] = intent
 
@@ -131,8 +120,8 @@ def chat():
         bot_response = "I can help with refunds. Please provide your order ID."
 
     elif intent == "product":
-        product_key = user_message.lower()
-        product_info = mock_products.get(product_key)
+        key = user_message.lower()
+        product_info = mock_products.get(key)
         if product_info:
             bot_response = product_info
         else:
