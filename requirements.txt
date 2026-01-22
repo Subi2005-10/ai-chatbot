@@ -1,3 +1,4 @@
+requests
 Flask==3.0.0
 flask-cors==4.0.0
 nltk==3.8.1
